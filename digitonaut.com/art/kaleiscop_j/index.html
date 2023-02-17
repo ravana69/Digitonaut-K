@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Mirrored from digitonaut.com/art/kaleiscop_j/ by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 16 Feb 2023 13:00:28 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<meta charset='utf-8'\>
+<meta name='apple-mobile-web-app-capable' content='yes'><meta name='apple-mobile-web-app-status-bar-style' content='black-translucent'><title>Kaleiscop J</title>
+
+<link type="text/css" rel="stylesheet" href="main.css">
+</head>
+<body>
+
+<script id="vs" type="not-js">
+void main()	{
+  gl_Position = vec4( position, 1.0 );
+}
+</script>
+<script id="fs" type="not-js">
+precision mediump float;
+
+// -------------------------------------------- code from https://glslsandbox.com/ ------------------
+
+// https://www.shadertoy.com/view/sttSzr
+precision highp float;
+
+uniform float time;
+uniform vec2 mouse;
+uniform vec2 resolution;
+vec2 hash2( vec2 p )
+{
+    // procedural white noise	
+	return fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))))*43758.5453);
+}
+// Voronoi (IQ) - slightly modified to return get the ID etc.
+vec4 VoronoiGrid( in vec2 x, out vec2 id )
+{
+    vec2 n = floor(x);
+    vec2 f = fract(x);
+
+    // first pass: regular voronoi
+	vec2 mg, mr;
+
+    float md = 8.0;
+    for( int j=-1; j<=1; j++ )
+    for( int i=-1; i<=1; i++ )
+    {
+        vec2 g = vec2(float(i),float(j));
+		vec2 o = hash2( n + g );
+        vec2 r = g + o - f;
+        float d = dot(r,r);
+        if( d<md )
+        {
+            md = d;
+            mr = r;
+            mg = g;
+        }
+    }
+    
+    // second pass: distance to borders
+    md = 8.0;
+    for( int j=-2; j<=2; j++ )
+    for( int i=-2; i<=2; i++ )
+    {
+        vec2 g = mg + vec2(float(i),float(j));
+		vec2 o = hash2( n + g );
+        vec2 r = g + o - f;
+
+        if( dot(mr-r,mr-r)>0.00001 )
+        md = min( md, dot( 0.5*(mr+r), normalize(r-mr) ) );
+    }
+    
+    id = (n+mg)+vec2(0.5); // ID is n+mg
+    return vec4(md, length(mr), mr);
+}
+
+mat2 rotate(float a)
+{
+	float c = cos(a);
+	float s = sin(a);
+	return mat2(c, s, -s, c);
+}
+void main( void )
+{
+	vec2 pp = ( gl_FragCoord.xy / resolution.xy ) * 2.0 - 1.0;
+	
+	pp=abs(pp);
+	float t = time*0.5;
+	float nt = 0.5+sin(t*.4)*0.5;
+	pp*=2.0+sin(length(pp*1.0)+time*0.2);
+    	vec2 id;
+    	float scale = 8.0;
+    	vec4 grid = VoronoiGrid(pp*scale,id);
+	    pp = id/scale;
+	
+	
+	pp.x += sin(time*0.4+pp.y*3.0)*0.135;
+	
+	pp *= 1.0+(pp.y*.25+nt*.2);
+	float d1 = abs(sin(pp.x*1.+t*0.7));
+	float d2 = abs(sin(pp.x*1.3+t*0.7));
+	float d3 = abs(sin(pp.x*1.6+t*0.7));
+	
+	float dd = length(vec3(d1,d2,d3))*0.54;
+	
+	vec3 col = vec3(d1,d2,d3)*dd;
+	
+	gl_FragColor = vec4( col,1.0 );
+}
+// -------------------------------------------------------------------------------------------------------------------
+
+</script>
+<script src="three.min.js"></script>
+<script src="main.js"></script>
+
+</body>
+
+<!-- Mirrored from digitonaut.com/art/kaleiscop_j/ by HTTrack Website Copier/3.x [XR&CO'2014], Thu, 16 Feb 2023 13:00:32 GMT -->
+</html>
